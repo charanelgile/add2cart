@@ -1,12 +1,20 @@
+// Libraries / Packages
 require("dotenv").config();
 const express = require("express");
 
+// Database Connection
 const dbconnect = require("./database/dbconnect");
+
+// Routers
+const productRouters = require("./routes/productRoutes");
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 app.use(express.json());
+
+// Endpoints
+app.use("/api/v1/products", productRouters);
 
 const startServer = async () => {
   try {
