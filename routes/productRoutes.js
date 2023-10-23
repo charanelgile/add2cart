@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { uploadProductImage } = require("../controllers/uploadControllers");
 const {
   getAllProducts,
   getProduct,
@@ -14,5 +15,7 @@ router
   .get(getProduct)
   .patch(updateProduct)
   .delete(deleteProduct);
+
+router.post("/uploads", uploadProductImage);
 
 module.exports = router;
