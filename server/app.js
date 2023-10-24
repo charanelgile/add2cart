@@ -10,6 +10,7 @@ const dbconnect = require("./database/dbconnect");
 
 // Routers
 const productRouters = require("./routes/productRoutes");
+const userRouters = require("./routes/userRoutes");
 
 // Error Handlers
 const errorHandler = require("./middlewares/errorHandler");
@@ -28,6 +29,7 @@ app.use(fileUpload({ useTempFiles: true }));
 
 // Endpoints
 app.use("/api/v1/products", productRouters);
+app.use("/api/v1/users", userRouters);
 
 app.use(errorHandler);
 
