@@ -26,9 +26,13 @@ const errorHandler = (error, req, res, next) => {
   }
 
   if (error.name === "CastError") {
+    const { value } = error;
+
     // Set the Status Code to 404 - Not Found
     customError.statusCode = 404;
-    customError.errorMessage = `No item matching the id: ${error.value}`;
+    customError.errorMessage = `No item matching the id: ${
+      typeof value === "object" ? value._id : value
+    }`;
   }
 
   // console.log(error);

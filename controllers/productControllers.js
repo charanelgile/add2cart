@@ -141,7 +141,121 @@ const createProduct = async (req, res) => {
 
 // Update Product
 const updateProduct = async (req, res) => {
-  res.status(200).send("Update Product");
+  const {
+    body: {
+      name,
+      description,
+      category,
+      subcategory,
+      price,
+      images,
+      stock,
+      rating,
+    },
+    params: {
+      // Destructure the 'id' from req.params and
+      // assign it an alias of "productID"
+      id: productID,
+    },
+  } = req;
+
+  if (name === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Product Name cannot be empty",
+      },
+    });
+  }
+
+  if (description === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please do not leave the Product Description empty",
+      },
+    });
+  }
+
+  if (category === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please do not leave the Product Category empty",
+      },
+    });
+  }
+
+  if (subcategory === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Product Subcategory cannot be empty",
+      },
+    });
+  }
+
+  if (price === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Invalid Product Price value",
+      },
+    });
+  } else if (price < 1) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Product Price cannot be zero",
+      },
+    });
+  }
+
+  if (images === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Product must have at least one image",
+      },
+    });
+  }
+
+  if (stock < 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Product Stock cannot be lower than zero",
+      },
+    });
+  } else if (stock === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Invalid Product Stock value",
+      },
+    });
+  }
+
+  if (rating < 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Product Rating cannot be lower than zero",
+      },
+    });
+  } else if (rating === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Invalid Product Rating value",
+      },
+    });
+  }
+
+  const product = await Product.findByIdAndUpdate(
+    { _id: productID },
+    req.body,
+    { new: true, runValidators: true } // This will ensure that the API Endpoint will return the updated Product Details
+  );
+
+  if (!product) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `No product matches the id: ${productID}`,
+      },
+    });
+  }
+
+  res.status(StatusCodes.OK).json({ status: "successful", product });
 };
 
 // Delete Product
