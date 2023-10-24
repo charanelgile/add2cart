@@ -12,6 +12,9 @@ const uploadProductImage = async (req, res) => {
     }
   );
 
+  // Prevent 'express-fileupload' from saving temporary files in the "tmp" subfolder
+  fs.unlinkSync(req.files.image.tempFilePath);
+
   return res.status(StatusCodes.CREATED).json({
     image: {
       src: result.secure_url,

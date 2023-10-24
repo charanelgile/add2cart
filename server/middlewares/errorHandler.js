@@ -37,7 +37,7 @@ const errorHandler = (error, req, res, next) => {
 
   // console.log(error);
 
-  console.log(customError);
+  // console.log(customError);
 
   return res.status(customError.statusCode).json({
     error: {
