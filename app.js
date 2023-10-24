@@ -10,6 +10,9 @@ const dbconnect = require("./database/dbconnect");
 // Routers
 const productRouters = require("./routes/productRoutes");
 
+// Error Handlers
+const errorHandler = require("./middlewares/errorHandler");
+
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -24,6 +27,8 @@ app.use(fileUpload({ useTempFiles: true }));
 
 // Endpoints
 app.use("/api/v1/products", productRouters);
+
+app.use(errorHandler);
 
 const startServer = async () => {
   try {

@@ -41,7 +41,7 @@ const ProductSchema = new mongoose.Schema(
     },
     images: {
       type: Array,
-      default: [],
+      required: [true, "Please provide Product Images"],
     },
     stock: {
       type: Number,
