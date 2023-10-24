@@ -1,5 +1,7 @@
+const fs = require("fs");
 const Product = require("../models/Product");
 const { StatusCodes } = require("http-status-codes");
+const cloudinary = require("cloudinary").v2; // NEVER FORGET THE V2
 
 // Get All Products
 const getAllProducts = async (req, res) => {
@@ -255,12 +257,50 @@ const updateProduct = async (req, res) => {
     });
   }
 
-  res.status(StatusCodes.OK).json({ status: "successful", product });
+  res
+    .status(StatusCodes.OK)
+    .json({ action: "update", status: "successful", product });
 };
 
 // Delete Product
 const deleteProduct = async (req, res) => {
-  res.status(200).send("Delete Product");
+  // Destructure the 'id' from req.params and
+  // assign it an alias of "productID"
+  const { id: productID } = req.params;
+
+  const product = await Product.findByIdAndRemove({ _id: productID });
+
+  if (!product) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `No product matches the id: ${productID}`,
+      },
+    });
+  }
+
+  res
+    .status(StatusCodes.OK)
+    .json({ action: "delete", status: "successful", product });
+};
+
+// Upload Product Image (Cloudinary)
+const uploadProductImage = async (req, res) => {
+  const result = await cloudinary.uploader.upload(
+    req.files.image.tempFilePath, // Temporary File Path created by the "express-fileupload" package
+    {
+      use_filename: true,
+      folder: "add2cart", // Folder in the Cloudinary Dashboard
+    }
+  );
+
+  // Prevent 'express-fileupload' from saving temporary files in the "tmp" subfolder
+  fs.unlinkSync(req.files.image.tempFilePath);
+
+  return res.status(StatusCodes.CREATED).json({
+    image: {
+      src: result.secure_url,
+    },
+  });
 };
 
 module.exports = {
@@ -269,4 +309,5 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadProductImage,
 };

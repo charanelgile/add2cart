@@ -1,11 +1,11 @@
 const router = require("express").Router();
-const { uploadProductImage } = require("../controllers/uploadControllers");
 const {
   getAllProducts,
   getProduct,
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadProductImage,
 } = require("../controllers/productControllers");
 
 router.route("/").get(getAllProducts).post(createProduct);
