@@ -35,11 +35,13 @@ const UserSchema = new mongoose.Schema(
         message: `{VALUE} is not a supported Gender`,
       },
     },
-    contactDetails: {
+    shippingDetails: {
       phone: { type: String },
       address: { type: String },
     },
     image: { type: String },
+    cart: { type: Array },
+    orders: { type: Array },
   },
   { timestamps: true }
 );

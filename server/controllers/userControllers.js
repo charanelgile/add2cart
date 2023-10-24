@@ -5,32 +5,49 @@ const cloudinary = require("cloudinary").v2; // NEVER FORGET THE V2
 
 // Get All Users
 const getAllUsers = async (req, res) => {
-  res.send("Get All Users");
+  res.send("GET All Users");
 };
 
 // Get User
 const getUser = async (req, res) => {
-  res.send("Get User");
+  res.send("GET User");
 };
 
 // Create User
 const createUser = async (req, res) => {
-  res.send("Create User");
+  res.send("CREATE User");
 };
 
 // Update User
 const updateUser = async (req, res) => {
-  res.send("Update User");
+  res.send("UPDATE User");
 };
 
 // Delete User
 const deleteUser = async (req, res) => {
-  res.send("Delete User");
+  res.send("DELETE User");
 };
 
 // Upload User Image
 const uploadUserImage = async (req, res) => {
-  res.send("Upload User Image");
+  const result = await cloudinary.uploader.upload(
+    req.files.image.tempFilePath, // Temporary File Path created by the "express-fileupload" package
+    {
+      use_filename: true,
+      folder: "add2cart", // Folder in the Cloudinary Dashboard
+    }
+  );
+
+  // Prevent 'express-fileupload' from saving temporary files in the "tmp" subfolder
+  // fs.unlinkSync(req.files.image.tempFilePath);
+
+  console.log(result);
+
+  res.status(StatusCodes.CREATED).json({
+    image: {
+      src: result.secure_url,
+    },
+  });
 };
 
 module.exports = {
