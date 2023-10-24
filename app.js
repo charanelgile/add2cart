@@ -1,5 +1,6 @@
 // Libraries / Packages
 require("dotenv").config();
+require("express-async-errors");
 const express = require("express");
 const fileUpload = require("express-fileupload");
 const cloudinary = require("cloudinary").v2; // NEVER FORGET THE V2
