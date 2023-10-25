@@ -10,7 +10,21 @@ const getAllUsers = async (req, res) => {
 
 // Get User
 const getUser = async (req, res) => {
-  res.send("GET User");
+  // Destructure the 'id' from req.params and
+  // assign it an alias of "userID"
+  const { id: userID } = req.params;
+
+  const user = await User.findOne({ _id: userID });
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `No user matches the id: ${userID}`,
+      },
+    });
+  }
+
+  res.status(StatusCodes.OK).json({ user });
 };
 
 // Create User

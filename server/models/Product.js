@@ -14,7 +14,7 @@ const ProductSchema = new mongoose.Schema(
     category: {
       type: String,
       enum: {
-        values: ["Unisex", "Men", "Women", "Kids"],
+        values: ["unisex", "men", "women", "kids"],
         message: `{VALUE} is not a supported Category`,
       },
       default: "Unisex",
@@ -23,13 +23,13 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       enum: {
         values: [
-          "Tops",
-          "Bottoms",
-          "Outerwear",
-          "Innerwear",
-          "Loungewear",
-          "Sportswear",
-          "Accessories",
+          "tops",
+          "bottoms",
+          "outerwear",
+          "innerwear",
+          "loungewear",
+          "sportswear",
+          "accessories",
         ],
         message: `{VALUE} is not a supported Subcategory`,
       },

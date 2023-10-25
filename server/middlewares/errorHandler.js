@@ -3,8 +3,7 @@ const { StatusCodes } = require("http-status-codes");
 const errorHandler = (error, req, res, next) => {
   let customError = {
     statusCode: error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
-    errorMessage:
-      error.message || "Something went wrong. Try again later.",
+    errorMessage: error.message || "Something went wrong. Try again later.",
   };
 
   if (error.name === "ValidationError") {
@@ -30,7 +29,7 @@ const errorHandler = (error, req, res, next) => {
 
     // Set the Status Code to 404 - Not Found
     customError.statusCode = 404;
-    customError.errorMessage = `No item matching the id: ${
+    customError.errorMessage = `No record matches the id: ${
       typeof value === "object" ? value._id : value
     }`;
   }
