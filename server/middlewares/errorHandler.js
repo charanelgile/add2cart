@@ -21,8 +21,8 @@ const errorHandler = (error, req, res, next) => {
     customError.statusCode = 400;
     // Combine every key under "error.keyValue"
     customError.errorMessage = `Duplicate value entered for ${Object.keys(
-      err.keyValue
-    )} field. Please choose another value.`;
+      error.keyValue
+    )} field. Please provide a different one.`;
   }
 
   if (error.name === "CastError") {

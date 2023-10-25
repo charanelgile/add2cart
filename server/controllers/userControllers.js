@@ -15,7 +15,9 @@ const getUser = async (req, res) => {
 
 // Create User
 const createUser = async (req, res) => {
-  res.send("CREATE User");
+  const user = await User.create(req.body);
+
+  res.status(StatusCodes.CREATED).json({ user });
 };
 
 // Update User
