@@ -12,20 +12,12 @@ const getAllUsers = async (req, res) => {
   // Setup an empty queries object
   let queries = {};
 
-  if (firstName) {
-    queries.firstName = { $regex: firstName, $options: "i" };
-  }
-
-  if (lastName) {
-    queries.lastName = { $regex: lastName, $options: "i" };
-  }
-
   if (email) {
     queries.email = { $regex: email };
   }
 
   if (gender) {
-    queries.gender = { $regex: gender, $options: "i" };
+    queries.gender = { $eq: gender };
   }
 
   // If nothing was destructured from req.query, then
@@ -33,13 +25,27 @@ const getAllUsers = async (req, res) => {
   // therefore returning all users, instead of throwing an error
   let results = User.find(queries);
 
-  // Sort the results based on the given options
-  // Otherwise, set "lastName" as the default sort order
+  // Filter the results more based on the specified First Name pattern
+  if (firstName) {
+    results = results.find({
+      "fullName.firstName": { $regex: firstName, $options: "i" },
+    });
+  }
+
+  // Filter the results more based on the specified Last Name pattern
+  if (lastName) {
+    results = results.find({
+      "fullName.lastName": { $regex: lastName, $options: "i" },
+    });
+  }
+
+  // Sort the filtered results based on the given options
+  // Otherwise, set "fullName.lastName" as the default sort order
   if (sort) {
     const sortOptions = sort.split(",").join(" ");
     results = results.sort(sortOptions);
   } else {
-    results = results.sort("lastName");
+    results = results.sort("fullName.lastName");
   }
 
   // Show only the specified / selected fields
