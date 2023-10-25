@@ -101,7 +101,98 @@ const createUser = async (req, res) => {
 
 // Update User
 const updateUser = async (req, res) => {
-  res.send("UPDATE User");
+  const {
+    body: { firstName, lastName, gender, phone, address, image },
+    params: {
+      // Destructure the 'id' from req.params and
+      // assign it an alias of "userID"
+      id: userID,
+    },
+  } = req;
+
+  if (gender === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please do not leave the Gender empty",
+      },
+    });
+  }
+
+  if (image === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Image cannot be empty",
+      },
+    });
+  }
+
+  let result = User.findByIdAndUpdate(
+    { _id: userID },
+    { gender, image },
+    { new: true, runValidators: true } // This will ensure that the API Endpoint will return the updated User Details
+  );
+
+  if (firstName !== "") {
+    result = result.findOneAndUpdate({
+      "fullName.firstName": firstName,
+    });
+  } else {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "First Name cannot be empty",
+      },
+    });
+  }
+
+  if (lastName !== "") {
+    result = result.findOneAndUpdate({
+      "fullName.lastName": lastName,
+    });
+  } else {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Last Name cannot be empty",
+      },
+    });
+  }
+
+  if (phone !== "") {
+    result = result.findOneAndUpdate({
+      "shippingDetails.phone": phone,
+    });
+  } else {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please do not leave the Phone Number empty",
+      },
+    });
+  }
+
+  if (address !== "") {
+    result = result.findOneAndUpdate({
+      "shippingDetails.address": address,
+    });
+  } else {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please do not leave the Address empty",
+      },
+    });
+  }
+
+  const user = await result;
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `No user matches the id: ${userID}`,
+      },
+    });
+  }
+
+  res
+    .status(StatusCodes.OK)
+    .json({ action: "update", status: "successful", user });
 };
 
 // Delete User
