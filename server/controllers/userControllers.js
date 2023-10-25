@@ -106,7 +106,25 @@ const updateUser = async (req, res) => {
 
 // Delete User
 const deleteUser = async (req, res) => {
-  res.send("DELETE User");
+  // Destructure the 'id' from req.params and
+  // assign it an alias of "userID"
+  const { id: userID } = req.params;
+
+  const user = await User.findByIdAndRemove({ _id: userID });
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `No user matches the id: ${userID}`,
+      },
+    });
+  }
+
+  res.status(StatusCodes.OK).json({
+    action: "delete",
+    status: "successful",
+    user,
+  });
 };
 
 // Upload User Image
