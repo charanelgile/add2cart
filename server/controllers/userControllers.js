@@ -5,7 +5,66 @@ const cloudinary = require("cloudinary").v2; // NEVER FORGET THE V2
 
 // Get All Users
 const getAllUsers = async (req, res) => {
-  res.send("GET All Users");
+  // Ensures that only these queries will be processed
+  // Any other queries aside from the ones below will be ignored
+  const { firstName, lastName, email, gender, sort, fields } = req.query;
+
+  // Setup an empty queries object
+  let queries = {};
+
+  if (firstName) {
+    queries.firstName = { $regex: firstName, $options: "i" };
+  }
+
+  if (lastName) {
+    queries.lastName = { $regex: lastName, $options: "i" };
+  }
+
+  if (email) {
+    queries.email = { $regex: email };
+  }
+
+  if (gender) {
+    queries.gender = { $regex: gender, $options: "i" };
+  }
+
+  // If nothing was destructured from req.query, then
+  // the find() method will only be receiving an empty object,
+  // therefore returning all users, instead of throwing an error
+  let results = User.find(queries);
+
+  // Sort the results based on the given options
+  // Otherwise, set "lastName" as the default sort order
+  if (sort) {
+    const sortOptions = sort.split(",").join(" ");
+    results = results.sort(sortOptions);
+  } else {
+    results = results.sort("lastName");
+  }
+
+  // Show only the specified / selected fields
+  if (fields) {
+    const selectedFields = fields.split(",").join(" ");
+    results = results.select(selectedFields);
+  }
+
+  // Set Page (defaults to 1, when not specified)
+  const page = Number(req.query.page) || 1;
+  // Set Limit (defaults to 10, when not specified)
+  const limit = Number(req.query.limit) || 10;
+
+  // Calculate how many items will be skipped based on the specified page and limit
+  // This will determine the pagination
+  const skip = (page - 1) * limit;
+
+  results = results.skip(skip).limit(limit);
+
+  const users = await results;
+
+  res.status(StatusCodes.OK).json({
+    count: users.length,
+    users,
+  });
 };
 
 // Get User
