@@ -114,14 +114,71 @@ const increaseQuantity = async (req, res) => {
   res.status(StatusCodes.CREATED).json({
     action: "increase item quantity",
     status: "successul",
-    message: "Product quantity successfully increase",
+    message: "Product quantity successfully increased",
     cart,
   });
 };
 
 // Decrease Item Quantity in Cart
 const decreaseQuantity = async (req, res) => {
-  res.send("Decrease Item Quantity");
+  // Determinant if the product was removed from the cart
+  let notRemoved = true;
+
+  const {
+    body: { userID },
+    params: { id: productID },
+  } = req;
+
+  // Find the User's Cart based on the User ID
+  const cart = await Cart.findOne({ owner: userID });
+
+  if (!cart) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `Cart not found`,
+      },
+    });
+  }
+
+  // Find the particular product in the Cart using the Product ID
+  const cartItem = cart.items.find((item) => {
+    return item.product.toString() === productID;
+  });
+
+  if (!cartItem) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `There's no such product in the cart`,
+      },
+    });
+  } else {
+    if (cartItem.quantity > 1) {
+      // Decrement the quantity if the product actually exists and is greater than 1
+      cartItem.quantity--;
+    } else {
+      // Otherwise, remove the product in the cart entirely
+      cart.items = cart.items.filter((item) => {
+        return item.product.toString() !== productID;
+      });
+
+      notRemoved = false;
+    }
+  }
+
+  await cart.save();
+
+  res.status(StatusCodes.CREATED).json({
+    action: `${
+      notRemoved ? "decrease item quantity" : "remove item in cart"
+    }`,
+    status: "successul",
+    message: `${
+      notRemoved
+        ? "Product quantity successfully decreased"
+        : "Product successfully removed from the cart"
+    }`,
+    cart,
+  });
 };
 
 module.exports = {
