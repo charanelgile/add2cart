@@ -4,7 +4,19 @@ const { StatusCodes } = require("http-status-codes");
 
 // View Cart
 const viewCart = async (req, res) => {
-  res.send("View Cart");
+  const { id: userID } = req.params;
+
+  const cart = await Cart.findOne({ owner: userID });
+
+  if (!cart) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `Cart not found`,
+      },
+    });
+  }
+
+  res.status(StatusCodes.OK).json({ cart });
 };
 
 // Add Item to Cart

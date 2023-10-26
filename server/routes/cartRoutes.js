@@ -8,7 +8,7 @@ const {
 } = require("../controllers/cartControllers");
 
 // View Cart
-router.get("/view", viewCart);
+router.get("/view/:id", viewCart);
 
 // Add Item to Cart
 router.post("/add", addToCart);
