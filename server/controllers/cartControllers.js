@@ -24,7 +24,7 @@ const addToCart = async (req, res) => {
   const { userID, productID, quantity } = req.body;
 
   // Find the Product based on the Product ID
-  const product = await Product.findById(productID);
+  let product = await Product.findById(productID);
 
   if (!product) {
     return res.status(StatusCodes.NOT_FOUND).json({
@@ -42,51 +42,39 @@ const addToCart = async (req, res) => {
     cart = new Cart({ owner: userID, items: [] });
   }
 
-  // If User already has a Cart, then check if it contains
-  // a product similar to the one being added
-  const similarProduct = cart.items.find((item) => {
-    return item.product.toString() === productID;
-  });
-
-  if (similarProduct) {
-    // If a similar product exists, check first if the quantity
-    // will not exceed the number of products in stock
-    if (similarProduct.quantity + quantity > product.stock) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        error: {
-          message: `Not enough product in stock`,
-        },
-      });
-    }
-
-    // Increase the quantity if a similar product already exists in the cart AND
-    // if the similar product's quantity will not exceed the number of products in stock
-    similarProduct.quantity += quantity;
-
-    console.log(`Product in Cart: ${similarProduct.quantity}`);
+  // Check if the quantity will exceed the number of products in stock
+  if (quantity > product.stock) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: `Not enough product in stock`,
+      },
+    });
   } else {
-    // If a similar product doesn't exist in the cart, check first if the quantity
-    // will not exceed the number of products in stock
-    if (quantity > product.stock) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        error: {
-          message: `Not enough product in stock`,
-        },
-      });
-    }
-
-    cart.items.push({
-      product: productID,
-      quantity,
-      price: product.price,
+    // If the quantity will not exceed the number of products in stock,
+    // check if the User's Cart already contains a product similar to the one being added
+    const similarProduct = cart.items.find((item) => {
+      return item.product.toString() === productID;
     });
 
-    console.log(`Quantity added to Cart: ${quantity}`);
+    if (similarProduct) {
+      // Just increase the quantity if a similar product already exists in the cart
+      similarProduct.quantity += quantity;
+    } else {
+      // Otherwise, push the item as a new product in the cart
+      cart.items.push({
+        product: productID,
+        quantity,
+        price: product.price,
+      });
+    }
   }
 
-  await product.save();
+  // Update the Product in Stock
+  product.stock = product.stock - quantity;
 
+  // Save all the changes made in the Cart and in the Product
   await cart.save();
+  await product.save();
 
   res.status(StatusCodes.CREATED).json({
     action: "add to cart",
