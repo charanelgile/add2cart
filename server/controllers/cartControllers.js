@@ -2,6 +2,13 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const { StatusCodes } = require("http-status-codes");
 
+/*
+  Recompute Available Stock after every
+    - Removal of Item in someone's Cart
+    - Increase in Item Quantity
+    - Decrease in Item Quantity
+*/
+
 // View Cart
 const viewCart = async (req, res) => {
   const { id: userID } = req.params;
@@ -102,6 +109,9 @@ const removeFromCart = async (req, res) => {
     });
   }
 
+  // Find the Product based on the Product ID
+  let product = await Product.findById({ _id: productID });
+
   // Find the particular product in the Cart using the Product ID
   const cartItem = cart.items.find((item) => {
     return item.product.toString() === productID;
@@ -114,12 +124,22 @@ const removeFromCart = async (req, res) => {
       },
     });
   } else {
+    // Return the quantity back into the Product in Stock
+    const returnQuantity = cart.items.find((item) => {
+      return item.product.toString() === productID;
+    });
+
+    product.stock += returnQuantity.quantity;
+
+    // Remove the product in the Cart
     cart.items = cart.items.filter((item) => {
       return item.product.toString() !== productID;
     });
   }
 
+  // Save all the changes made in the Cart and in the Product
   await cart.save();
+  await product.save();
 
   res.status(StatusCodes.OK).json({
     action: "remove item in cart",
