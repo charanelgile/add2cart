@@ -72,7 +72,47 @@ const addToCart = async (req, res) => {
 
 // Remove Item from Cart
 const removeFromCart = async (req, res) => {
-  res.send("Remove from Cart");
+  const {
+    body: { userID },
+    params: { id: productID },
+  } = req;
+
+  // Find the User's Cart based on the User ID
+  const cart = await Cart.findOne({ owner: userID });
+
+  if (!cart) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `Cart not found`,
+      },
+    });
+  }
+
+  // Find the particular product in the Cart using the Product ID
+  const cartItem = cart.items.find((item) => {
+    return item.product.toString() === productID;
+  });
+
+  if (!cartItem) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `There's no such product in the cart`,
+      },
+    });
+  } else {
+    cart.items = cart.items.filter((item) => {
+      return item.product.toString() !== productID;
+    });
+  }
+
+  await cart.save();
+
+  res.status(StatusCodes.OK).json({
+    action: "remove item in cart",
+    status: "successful",
+    message: "Product successfully removed from your cart",
+    cart,
+  });
 };
 
 // Increase Item Quantity in Cart
@@ -111,7 +151,7 @@ const increaseQuantity = async (req, res) => {
 
   await cart.save();
 
-  res.status(StatusCodes.CREATED).json({
+  res.status(StatusCodes.OK).json({
     action: "increase item quantity",
     status: "successul",
     message: "Product quantity successfully increased",
@@ -167,7 +207,7 @@ const decreaseQuantity = async (req, res) => {
 
   await cart.save();
 
-  res.status(StatusCodes.CREATED).json({
+  res.status(StatusCodes.OK).json({
     action: `${
       notRemoved ? "decrease item quantity" : "remove item in cart"
     }`,
@@ -175,7 +215,7 @@ const decreaseQuantity = async (req, res) => {
     message: `${
       notRemoved
         ? "Product quantity successfully decreased"
-        : "Product successfully removed from the cart"
+        : "Product successfully removed from your cart"
     }`,
     cart,
   });
