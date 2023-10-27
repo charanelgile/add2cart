@@ -49,16 +49,42 @@ const addToCart = async (req, res) => {
   });
 
   if (similarProduct) {
-    // Increase the quantity if a similar product already exists in the cart
+    // If a similar product exists, check first if the quantity
+    // will not exceed the number of products in stock
+    if (similarProduct.quantity + quantity > product.stock) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        error: {
+          message: `Not enough product in stock`,
+        },
+      });
+    }
+
+    // Increase the quantity if a similar product already exists in the cart AND
+    // if the similar product's quantity will not exceed the number of products in stock
     similarProduct.quantity += quantity;
+
+    console.log(`Product in Cart: ${similarProduct.quantity}`);
   } else {
-    // Otherwise, just add the product
+    // If a similar product doesn't exist in the cart, check first if the quantity
+    // will not exceed the number of products in stock
+    if (quantity > product.stock) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        error: {
+          message: `Not enough product in stock`,
+        },
+      });
+    }
+
     cart.items.push({
       product: productID,
       quantity,
       price: product.price,
     });
+
+    console.log(`Quantity added to Cart: ${quantity}`);
   }
+
+  await product.save();
 
   await cart.save();
 
