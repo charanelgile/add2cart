@@ -4,7 +4,6 @@ const { StatusCodes } = require("http-status-codes");
 
 /*
   Recompute Available Stock after every
-    - Removal of Item in someone's Cart
     - Increase in Item Quantity
     - Decrease in Item Quantity
 */
@@ -152,12 +151,12 @@ const removeFromCart = async (req, res) => {
 // Increase Item Quantity in Cart
 const increaseQuantity = async (req, res) => {
   const {
-    body: { userID },
+    body: { userID, quantity },
     params: { id: productID },
   } = req;
 
   // Find the User's Cart based on the User ID
-  const cart = await Cart.findOne({ owner: userID });
+  let cart = await Cart.findOne({ owner: userID });
 
   if (!cart) {
     return res.status(StatusCodes.NOT_FOUND).json({
@@ -166,6 +165,9 @@ const increaseQuantity = async (req, res) => {
       },
     });
   }
+
+  // Find the Product based on the Product ID
+  let product = await Product.findById({ _id: productID });
 
   // Find the particular product in the Cart using the Product ID
   const cartItem = cart.items.find((item) => {
@@ -180,10 +182,25 @@ const increaseQuantity = async (req, res) => {
     });
   }
 
-  // Increment the quantity if the product actually exists
-  cartItem.quantity++;
+  // If the product actually exists, then
+  // Check if the quantity will exceed the number of products in stock
+  if (cartItem && quantity > product.stock) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: `Not enough product in stock`,
+      },
+    });
+  } else if (cartItem && product.stock >= quantity) {
+    // Increment the quantity if it will not exceed the number of products in stock
+    cartItem.quantity += quantity;
 
+    // Update the Product in Stock
+    product.stock -= quantity;
+  }
+
+  // Save all the changes made in the Cart and in the Product
   await cart.save();
+  await product.save();
 
   res.status(StatusCodes.OK).json({
     action: "increase item quantity",
