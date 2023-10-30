@@ -2,12 +2,6 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const { StatusCodes } = require("http-status-codes");
 
-/*
-  Recompute Available Stock after every
-    - Increase in Item Quantity
-    - Decrease in Item Quantity
-*/
-
 // View Cart
 const viewCart = async (req, res) => {
   const { id: userID } = req.params;
@@ -216,12 +210,12 @@ const decreaseQuantity = async (req, res) => {
   let notRemoved = true;
 
   const {
-    body: { userID },
+    body: { userID, quantity },
     params: { id: productID },
   } = req;
 
   // Find the User's Cart based on the User ID
-  const cart = await Cart.findOne({ owner: userID });
+  let cart = await Cart.findOne({ owner: userID });
 
   if (!cart) {
     return res.status(StatusCodes.NOT_FOUND).json({
@@ -230,6 +224,9 @@ const decreaseQuantity = async (req, res) => {
       },
     });
   }
+
+  // Find the Product based on the Product ID
+  let product = await Product.findById({ _id: productID });
 
   // Find the particular product in the Cart using the Product ID
   const cartItem = cart.items.find((item) => {
@@ -242,21 +239,30 @@ const decreaseQuantity = async (req, res) => {
         message: `There's no such product in the cart`,
       },
     });
-  } else {
-    if (cartItem.quantity > 1) {
-      // Decrement the quantity if the product actually exists and is greater than 1
-      cartItem.quantity--;
-    } else {
-      // Otherwise, remove the product in the cart entirely
-      cart.items = cart.items.filter((item) => {
-        return item.product.toString() !== productID;
-      });
-
-      notRemoved = false;
-    }
   }
 
+  // If the product actually exists, then
+  // Check if the quantity to be decreased exceeds the number in the cart
+  // If so, then remove the product in the cart entirely
+  if (cartItem && quantity >= cartItem.quantity) {
+    cart.items = cart.items.filter((item) => {
+      return item.product.toString() !== productID;
+    });
+
+    // Update the Product in Stock
+    product.stock += cartItem.quantity;
+
+    notRemoved = false;
+  } else if (cartItem && quantity < cartItem.quantity) {
+    cartItem.quantity -= quantity;
+
+    // Update the Product in Stock
+    product.stock += quantity;
+  }
+
+  // Save all the changes made in the Cart and in the Product
   await cart.save();
+  await product.save();
 
   res.status(StatusCodes.OK).json({
     action: `${
