@@ -12,6 +12,7 @@ const dbconnect = require("./database/dbconnect");
 const productRouters = require("./routes/productRoutes");
 const userRouters = require("./routes/userRoutes");
 const cartRouters = require("./routes/cartRoutes");
+const orderRouters = require("./routes/orderRoutes");
 
 // Error Handlers
 const errorHandler = require("./middlewares/errorHandler");
@@ -32,6 +33,7 @@ app.use(fileUpload({ useTempFiles: true }));
 app.use("/api/v1/products", productRouters);
 app.use("/api/v1/users", userRouters);
 app.use("/api/v1/cart", cartRouters);
+app.use("/api/v1/orders", orderRouters);
 app.use(errorHandler);
 
 const startServer = async () => {
