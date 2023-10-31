@@ -1,4 +1,5 @@
 const Cart = require("../models/Cart");
+const User = require("../models/User");
 const Product = require("../models/Product");
 const { StatusCodes } = require("http-status-codes");
 
@@ -23,8 +24,22 @@ const viewCart = async (req, res) => {
 const addToCart = async (req, res) => {
   const { userID, productID, quantity } = req.body;
 
+  // Find the User based on the User ID
+  let user = await User.findById({ _id: userID });
+
   // Find the Product based on the Product ID
   let product = await Product.findById(productID);
+
+  // Find the User's Cart based on the User ID
+  let cart = await Cart.findOne({ owner: userID });
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `User not found`,
+      },
+    });
+  }
 
   if (!product) {
     return res.status(StatusCodes.NOT_FOUND).json({
@@ -33,9 +48,6 @@ const addToCart = async (req, res) => {
       },
     });
   }
-
-  // Find the User's Cart based on the User ID
-  let cart = await Cart.findOne({ owner: userID });
 
   // If User doesn't have a Cart yet, then create one for them
   if (!cart) {
@@ -72,7 +84,11 @@ const addToCart = async (req, res) => {
   // Update the Product in Stock
   product.stock = product.stock - quantity;
 
-  // Save all the changes made in the Cart and in the Product
+  // Update the Cart in User's record
+  user.cart = cart.items;
+
+  // Save all the changes made in the User, Cart, and Product
+  await user.save();
   await cart.save();
   await product.save();
 
