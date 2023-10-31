@@ -145,7 +145,7 @@ const removeFromCart = async (req, res) => {
 // Increase Item Quantity in Cart
 const increaseQuantity = async (req, res) => {
   const {
-    body: { userID, quantity },
+    body: { userID },
     params: { id: productID },
   } = req;
 
@@ -178,18 +178,18 @@ const increaseQuantity = async (req, res) => {
 
   // If the product actually exists, then
   // Check if the quantity will exceed the number of products in stock
-  if (cartItem && quantity > product.stock) {
+  if (product.stock === 0) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
         message: `Not enough product in stock`,
       },
     });
-  } else if (cartItem && product.stock >= quantity) {
+  } else {
     // Increment the quantity if it will not exceed the number of products in stock
-    cartItem.quantity += quantity;
+    cartItem.quantity++;
 
     // Update the Product in Stock
-    product.stock -= quantity;
+    product.stock--;
   }
 
   // Save all the changes made in the Cart and in the Product
