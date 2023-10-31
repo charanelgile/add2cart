@@ -177,7 +177,7 @@ const increaseQuantity = async (req, res) => {
   }
 
   // If the product actually exists, then
-  // Check if the quantity will exceed the number of products in stock
+  // Check if there are no more products in stock
   if (product.stock === 0) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
@@ -185,7 +185,7 @@ const increaseQuantity = async (req, res) => {
       },
     });
   } else {
-    // Increment the quantity if it will not exceed the number of products in stock
+    // Increment the quantity if the number of products in stock is greater than zero
     cartItem.quantity++;
 
     // Update the Product in Stock
@@ -210,7 +210,7 @@ const decreaseQuantity = async (req, res) => {
   let notRemoved = true;
 
   const {
-    body: { userID, quantity },
+    body: { userID },
     params: { id: productID },
   } = req;
 
@@ -239,25 +239,21 @@ const decreaseQuantity = async (req, res) => {
         message: `There's no such product in the cart`,
       },
     });
-  }
+  } else {
+    if (cartItem.quantity > 1) {
+      // Decrement the quantity if the product actually exists and is greater than 1
+      cartItem.quantity--;
+    } else {
+      // Otherwise, remove the product from the cart entirely
+      cart.items = cart.items.filter((item) => {
+        return item.product.toString() !== productID;
+      });
 
-  // If the product actually exists, then
-  // Check if the quantity to be decreased exceeds the number in the cart
-  // If so, then remove the product in the cart entirely
-  if (cartItem && quantity >= cartItem.quantity) {
-    cart.items = cart.items.filter((item) => {
-      return item.product.toString() !== productID;
-    });
-
-    // Update the Product in Stock
-    product.stock += cartItem.quantity;
-
-    notRemoved = false;
-  } else if (cartItem && quantity < cartItem.quantity) {
-    cartItem.quantity -= quantity;
+      notRemoved = false;
+    }
 
     // Update the Product in Stock
-    product.stock += quantity;
+    product.stock++;
   }
 
   // Save all the changes made in the Cart and in the Product
