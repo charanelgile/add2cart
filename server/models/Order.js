@@ -15,7 +15,7 @@ const OrderSchema = new mongoose.Schema(
     },
     items: [
       {
-        productID: {
+        product: {
           type: mongoose.Types.ObjectId,
           ref: "Product",
           required: [true, "A product must be associated with an item"],
