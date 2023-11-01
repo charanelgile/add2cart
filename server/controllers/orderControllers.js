@@ -88,13 +88,6 @@ const confirmOrder = async (req, res) => {
     shippingDetails.address = user.shippingDetails.address;
   }
 
-  // Update the Cart and Orders in User's record
-  user.cart = remainInCart;
-  user.orders.push(...itemsForCheckout);
-
-  // Save the changes to User
-  await user.save();
-
   // Create the Order
   const order = await Order.create({
     orderedBy: {
@@ -105,6 +98,24 @@ const confirmOrder = async (req, res) => {
     totalAmount,
     shippingDetails,
   });
+
+  // Update the Cart and Orders in User's record
+  user.cart = remainInCart;
+  user.orders.push({
+    order: order._id,
+    items: order.items,
+    totalAmount,
+    shippingDetails,
+    status: order.status,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+  });
+
+  // Save the changes to User
+  await user.save();
+
+  console.log("User:");
+  console.log(user);
 
   res.status(StatusCodes.CREATED).json({
     action: "confirm order",
