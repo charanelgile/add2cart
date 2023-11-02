@@ -5,24 +5,12 @@ const { StatusCodes } = require("http-status-codes");
 
 // View All Orders
 const viewAllOrders = async (req, res) => {
-  const { userID } = req.body;
-
-  if (!userID) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      error: {
-        message: "Please provide a User ID",
-      },
-    });
-  }
-
-  const user = await User.findById({ _id: userID });
-
-  res.status(StatusCodes.OK).json(user);
+  res.send("View ALL Orders");
 };
 
 // View Order
 const viewOrder = async (req, res) => {
-  res.send("View Order");
+  res.send("View Single Order");
 };
 
 // Confirm Order
@@ -32,7 +20,7 @@ const confirmOrder = async (req, res) => {
   if (!userID) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
-        message: "Please provide a User ID",
+        message: "Please provide the User ID",
       },
     });
   }
@@ -66,7 +54,7 @@ const confirmOrder = async (req, res) => {
     });
   }
 
-  if (user.cart.length === 0) {
+  if (cart.items.length === 0) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
         message: `User's cart is empty`,
@@ -75,11 +63,11 @@ const confirmOrder = async (req, res) => {
   }
 
   // Separate the Items for Checkout from those to remain in the Cart
-  const remainInCart = user.cart.filter((item) => {
+  const remainInCart = cart.items.filter((item) => {
     return item.checkout === false;
   });
 
-  const itemsForCheckout = user.cart.filter((item) => {
+  const itemsForCheckout = cart.items.filter((item) => {
     return item.checkout === true;
   });
 
@@ -95,7 +83,7 @@ const confirmOrder = async (req, res) => {
   // Calculate the total amount of the items for checkout
   let totalAmount = itemsForCheckout
     .map((item) => {
-      return item.price * item.quantity; // Flatten the array first by getting only the subtotal for every item...
+      return item.price * item.quantity; // Flatten the array first by getting only the subtotal for every item ...
     })
     .reduce((total, current) => {
       return total + current; // ... Then compute the total from the array of subtotals
@@ -103,8 +91,8 @@ const confirmOrder = async (req, res) => {
 
   // Assign a default value to each Shipping Detail, in case none was specified
   // If name is empty or not specified, assign the User's Name
-  if (!shippingDetails.name || shippingDetails.name === "") {
-    shippingDetails.name = `${user.fullName.firstName} ${user.fullName.lastName}`;
+  if (!shippingDetails.recipient || shippingDetails.recipient === "") {
+    shippingDetails.recipient = `${user.fullName.firstName} ${user.fullName.lastName}`;
   }
   // If phone is empty or not specified, assign the User's Phone
   if (!shippingDetails.phone || shippingDetails.phone === "") {
@@ -126,20 +114,11 @@ const confirmOrder = async (req, res) => {
     shippingDetails,
   });
 
-  // Update the Cart and Orders in User's record
-  user.cart = remainInCart;
-  user.orders.push({
-    order: order._id,
-    items: order.items,
-    totalAmount,
-    shippingDetails,
-    status: order.status,
-    createdAt: order.createdAt,
-    updatedAt: order.updatedAt,
-  });
+  // Update the Items in the User's Cart
+  cart.items = [...remainInCart];
 
   // Save the changes to User
-  await user.save();
+  await cart.save();
 
   res.status(StatusCodes.CREATED).json({
     action: "confirm order",
