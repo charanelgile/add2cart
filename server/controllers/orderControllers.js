@@ -3,10 +3,10 @@ const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 const { StatusCodes } = require("http-status-codes");
 
-// View Everyone's Orders
-const viewEveryonesOrders = async (req, res) => {
+// View All Orders
+const viewAllOrders = async (req, res) => {
   // Destructure the query parameters
-  const { status, sort, fields } = req.query;
+  const { status, orderedBy, sort, fields } = req.query;
 
   // Setup an empty query parameters object
   let queries = {};
@@ -20,6 +20,14 @@ const viewEveryonesOrders = async (req, res) => {
   // the find() method will only be receiving an empty object,
   // therefore returning all orders, instead of throwing an error
   let results = Order.find(queries);
+
+  // Filter the results even more to show only the orders
+  // made by the same User through their Email
+  if (orderedBy) {
+    results = results.find({
+      "orderedBy.email": { $eq: orderedBy },
+    });
+  }
 
   // Sort the filtered results based on the given options ...
   if (sort) {
@@ -63,13 +71,8 @@ const viewEveryonesOrders = async (req, res) => {
   });
 };
 
-// View User's Orders
-const viewUsersOrders = async (req, res) => {
-  res.send("View User's Orders");
-};
-
-// View Single Order
-const viewSingleOrder = async (req, res) => {
+// View Order
+const viewOrder = async (req, res) => {
   res.send("View Single Order");
 };
 
@@ -199,9 +202,8 @@ const cancelOrder = async (req, res) => {
 };
 
 module.exports = {
-  viewEveryonesOrders,
-  viewUsersOrders,
-  viewSingleOrder,
+  viewAllOrders,
+  viewOrder,
   confirmOrder,
   updateOrder,
   cancelOrder,
