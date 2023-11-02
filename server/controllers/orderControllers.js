@@ -207,6 +207,31 @@ const confirmOrder = async (req, res) => {
 
 // Update Order
 const updateOrder = async (req, res) => {
+  /*
+    Properties that can be updated in an order:
+    - recipient
+    - phone
+    - address
+    - status
+    - items for checkout
+      - increase / decrease in item quantity
+        - when increasing:
+          - update the product in stock
+          - update the total amount
+        - when decreasing:
+          - update the product in stock
+          - update the total amount
+          - if decreased to 0
+            - remove the product in the array and
+            - update the items for checkout
+            - update the product in stock
+            - update the total amount
+      - remove a particular product in the items for checkout
+        - update the items for checkout
+        - update the product in stock
+        - update the total amount
+  */
+
   res.send("Update Order");
 };
 

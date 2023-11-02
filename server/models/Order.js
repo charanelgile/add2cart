@@ -54,7 +54,13 @@ const OrderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ["pending", "being prepared", "on the way", "delivered"],
+        values: [
+          "pending",
+          "being prepared",
+          "cancelled",
+          "on the way",
+          "delivered",
+        ],
         message: `{VALUE} is not a supported Order Status`,
       },
       default: "pending",
