@@ -1,17 +1,21 @@
 const router = require("express").Router();
 const {
-  viewAllOrders,
-  viewOrder,
+  viewEveryonesOrders,
+  viewUsersOrders,
+  viewSingleOrder,
   confirmOrder,
   updateOrder,
   cancelOrder,
 } = require("../controllers/orderControllers");
 
-// View All Orders
-router.get("/view", viewAllOrders);
+// View Everyone's Orders
+router.get("/view/everyone", viewEveryonesOrders);
 
-// View Order
-router.get("/view/:id", viewOrder);
+// View User's Orders
+router.get("/view/user/:id", viewUsersOrders);
+
+// View Single Order
+router.get("/view/single/:id", viewSingleOrder);
 
 // Confirm Order
 router.post("/confirm", confirmOrder);

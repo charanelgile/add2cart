@@ -3,13 +3,31 @@ const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 const { StatusCodes } = require("http-status-codes");
 
-// View All Orders
-const viewAllOrders = async (req, res) => {
-  res.send("View ALL Orders");
+// View Everyone's Orders
+const viewEveryonesOrders = async (req, res) => {
+  const orders = await Order.find();
+
+  if (!orders) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: "No orders found",
+      },
+    });
+  }
+
+  res.status(StatusCodes.OK).json({
+    count: orders.length,
+    orders,
+  });
 };
 
-// View Order
-const viewOrder = async (req, res) => {
+// View User's Orders
+const viewUsersOrders = async (req, res) => {
+  res.send("View User's Orders");
+};
+
+// View Single Order
+const viewSingleOrder = async (req, res) => {
   res.send("View Single Order");
 };
 
@@ -139,8 +157,9 @@ const cancelOrder = async (req, res) => {
 };
 
 module.exports = {
-  viewAllOrders,
-  viewOrder,
+  viewEveryonesOrders,
+  viewUsersOrders,
+  viewSingleOrder,
   confirmOrder,
   updateOrder,
   cancelOrder,
