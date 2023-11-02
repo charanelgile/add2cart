@@ -7,10 +7,6 @@ const ProductSchema = new mongoose.Schema(
       required: [true, "Please provide the Product Name"],
       maxlength: 120,
     },
-    description: {
-      type: String,
-      maxlength: 350,
-    },
     category: {
       type: String,
       enum: {
@@ -30,19 +26,28 @@ const ProductSchema = new mongoose.Schema(
           "loungewear",
           "sportswear",
           "accessories",
+          "others",
         ],
         message: `{VALUE} is not a supported Subcategory`,
       },
       required: [true, "Please provide the Product Subcategory"],
     },
+    description: {
+      type: String,
+      maxlength: 350,
+    },
     price: {
       type: Number,
       required: [true, "Please set the Product Price"],
     },
-    images: {
-      type: Array,
-      required: [true, "Please provide Product Images"],
-    },
+    images: [
+      {
+        src: {
+          type: String,
+          required: [true, "Please provide at least one Product Image"],
+        },
+      },
+    ],
     stock: {
       type: Number,
       default: 10,

@@ -40,8 +40,6 @@ const UserSchema = new mongoose.Schema(
       address: { type: String },
     },
     image: { type: String },
-    cart: { type: Array },
-    orders: { type: Array },
   },
   { timestamps: true }
 );

@@ -35,7 +35,7 @@ const OrderSchema = new mongoose.Schema(
       type: Number,
     },
     shippingDetails: {
-      name: {
+      recipient: {
         type: String,
         required: [true, "Please provide the name of the recipient"],
       },

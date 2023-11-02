@@ -3,6 +3,23 @@ const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 const { StatusCodes } = require("http-status-codes");
 
+// View All Orders
+const viewAllOrders = async (req, res) => {
+  const { userID } = req.body;
+
+  if (!userID) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please provide a User ID",
+      },
+    });
+  }
+
+  const user = await User.findById({ _id: userID });
+
+  res.status(StatusCodes.OK).json(user);
+};
+
 // View Order
 const viewOrder = async (req, res) => {
   res.send("View Order");
@@ -30,11 +47,21 @@ const confirmOrder = async (req, res) => {
 
   // Find the User based on the User ID
   const user = await User.findById({ _id: userID });
+  // Find the Cart based on the User ID
+  const cart = await Cart.findOne({ owner: userID });
 
   if (!user) {
     return res.status(StatusCodes.NOT_FOUND).json({
       error: {
         message: `User not found`,
+      },
+    });
+  }
+
+  if (!cart) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `Cart not found`,
       },
     });
   }
@@ -114,9 +141,6 @@ const confirmOrder = async (req, res) => {
   // Save the changes to User
   await user.save();
 
-  console.log("User:");
-  console.log(user);
-
   res.status(StatusCodes.CREATED).json({
     action: "confirm order",
     status: "successful",
@@ -136,6 +160,7 @@ const cancelOrder = async (req, res) => {
 };
 
 module.exports = {
+  viewAllOrders,
   viewOrder,
   confirmOrder,
   updateOrder,
