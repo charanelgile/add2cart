@@ -36,6 +36,17 @@ const viewEveryonesOrders = async (req, res) => {
     results = results.select(selectedFields);
   }
 
+  // Set Page (defaults to 1, when not specified)
+  const page = Number(req.query.page) || 1;
+  // Set Limit (defaults to 10, when not specified)
+  const limit = Number(req.query.limit) || 10;
+
+  // Calculate how many items will be skipped based on the specified page and limit
+  // This will determine the pagination
+  const skip = (page - 1) * limit;
+
+  results = results.skip(skip).limit(limit);
+
   const orders = await results;
 
   if (!orders) {
