@@ -120,6 +120,14 @@ const removeFromCart = async (req, res) => {
     params: { id: productID },
   } = req;
 
+  if (!userID || userID === "") {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `Please provide a User ID`,
+      },
+    });
+  }
+
   // Find the Product based on the Product ID
   let product = await Product.findById({ _id: productID });
 
