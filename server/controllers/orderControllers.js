@@ -73,7 +73,21 @@ const viewAllOrders = async (req, res) => {
 
 // View Order
 const viewOrder = async (req, res) => {
-  res.send("View Single Order");
+  // Destructure the id from req.params
+  // Then assign it an alias of "orderID"
+  const { id: orderID } = req.params;
+
+  const order = await Order.findById({ _id: orderID });
+
+  if (!order) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: "Order not found",
+      },
+    });
+  }
+
+  res.status(StatusCodes.OK).json({ order });
 };
 
 // Confirm Order
