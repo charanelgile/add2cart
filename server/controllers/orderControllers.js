@@ -5,7 +5,38 @@ const { StatusCodes } = require("http-status-codes");
 
 // View Everyone's Orders
 const viewEveryonesOrders = async (req, res) => {
-  const orders = await Order.find();
+  // Destructure the query parameters
+  const { status, sort, fields } = req.query;
+
+  // Setup an empty query parameters object
+  let queries = {};
+
+  // Filter the results based on the status
+  if (status) {
+    queries.status = { $eq: status };
+  }
+
+  // If no status filter was given, then
+  // the find() method will only be receiving an empty object,
+  // therefore returning all orders, instead of throwing an error
+  let results = Order.find(queries);
+
+  // Sort the filtered results based on the given options ...
+  if (sort) {
+    const sortOptions = sort.split(",").join(" ");
+    results = results.sort(sortOptions);
+  } else {
+    // ... Otherwise, set "createdAt" (newest to oldest) as the default sort order
+    results = results.sort("-createdAt");
+  }
+
+  // Show only the specified / selected fields
+  if (fields) {
+    const selectedFields = fields.split(",").join(" ");
+    results = results.select(selectedFields);
+  }
+
+  const orders = await results;
 
   if (!orders) {
     return res.status(StatusCodes.NOT_FOUND).json({
