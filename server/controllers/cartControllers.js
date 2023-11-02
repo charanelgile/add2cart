@@ -1,5 +1,4 @@
 const Cart = require("../models/Cart");
-const User = require("../models/User");
 const Product = require("../models/Product");
 const { StatusCodes } = require("http-status-codes");
 
@@ -22,24 +21,38 @@ const viewCart = async (req, res) => {
 
 // Add Item to Cart
 const addToCart = async (req, res) => {
-  const { userID, productID, quantity } = req.body;
+  let { userID, productID, quantity, checkout } = req.body;
 
-  // Find the User based on the User ID
-  let user = await User.findById({ _id: userID });
+  if (!userID || userID === "") {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `Please provide a User ID`,
+      },
+    });
+  }
+
+  if (!productID || productID === "") {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `Please provide the Product ID`,
+      },
+    });
+  }
+
+  //Check if the specified quantity is zero
+  if (quantity == 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: `Product Quantity cannot be zero`,
+      },
+    });
+  }
 
   // Find the Product based on the Product ID
   let product = await Product.findById({ _id: productID });
 
   // Find the User's Cart based on the User ID
   let cart = await Cart.findOne({ owner: userID });
-
-  if (!user) {
-    return res.status(StatusCodes.NOT_FOUND).json({
-      error: {
-        message: `User not found`,
-      },
-    });
-  }
 
   if (!product) {
     return res.status(StatusCodes.NOT_FOUND).json({
@@ -55,7 +68,7 @@ const addToCart = async (req, res) => {
   }
 
   // Check if the quantity will exceed the number of products in stock
-  if (quantity > product.stock) {
+  if (Number(quantity) > product.stock) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
         message: `Not enough product in stock`,
@@ -70,25 +83,25 @@ const addToCart = async (req, res) => {
 
     if (similarProduct) {
       // Just increase the quantity if a similar product already exists in the cart
-      similarProduct.quantity += quantity;
+      similarProduct.quantity += Number(quantity);
+
+      // Update the checkout flag, as well, if specified
+      similarProduct.checkout = Boolean(checkout);
     } else {
-      // Otherwise, push the item as a new product in the cart
+      // Otherwise, add the item as a new product in the cart
       cart.items.push({
         product: productID,
-        quantity,
+        quantity: Number(quantity),
         price: product.price,
+        checkout: Boolean(checkout),
       });
     }
   }
 
   // Update the Product in Stock
-  product.stock = product.stock - quantity;
+  product.stock = product.stock - Number(quantity);
 
-  // Update the Cart in User's record
-  user.cart = cart.items;
-
-  // Save all the changes made in the User, Cart, and Product
-  await user.save();
+  // Save all the changes made in the Cart and Product
   await cart.save();
   await product.save();
 
@@ -107,22 +120,11 @@ const removeFromCart = async (req, res) => {
     params: { id: productID },
   } = req;
 
-  // Find the User based on the User ID
-  let user = await User.findById({ _id: userID });
-
   // Find the Product based on the Product ID
   let product = await Product.findById({ _id: productID });
 
   // Find the User's Cart based on the User ID
   let cart = await Cart.findOne({ owner: userID });
-
-  if (!user) {
-    return res.status(StatusCodes.NOT_FOUND).json({
-      error: {
-        message: `User not found`,
-      },
-    });
-  }
 
   if (!product) {
     return res.status(StatusCodes.NOT_FOUND).json({
@@ -164,13 +166,9 @@ const removeFromCart = async (req, res) => {
     cart.items = cart.items.filter((item) => {
       return item.product.toString() !== productID;
     });
-
-    // Update the Cart in User's record
-    user.cart = cart.items;
   }
 
-  // Save all the changes made in the User, Cart, and Product
-  await user.save();
+  // Save all the changes made in the Cart and Product
   await cart.save();
   await product.save();
 
