@@ -276,22 +276,19 @@ const decreaseQuantity = async (req, res) => {
     params: { id: productID },
   } = req;
 
-  // Find the User based on the User ID
-  let user = await User.findById({ _id: userID });
+  if (!userID || userID === "") {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: `Please provide a User ID`,
+      },
+    });
+  }
 
   // Find the Product based on the Product ID
   let product = await Product.findById({ _id: productID });
 
   // Find the User's Cart based on the User ID
   let cart = await Cart.findOne({ owner: userID });
-
-  if (!user) {
-    return res.status(StatusCodes.NOT_FOUND).json({
-      error: {
-        message: `User not found`,
-      },
-    });
-  }
 
   if (!product) {
     return res.status(StatusCodes.NOT_FOUND).json({
@@ -335,13 +332,9 @@ const decreaseQuantity = async (req, res) => {
 
     // Update the Product in Stock
     product.stock++;
-
-    // Update the Cart in User's record
-    user.cart = cart.items;
   }
 
-  // Save all the changes made in the User, Cart, and Product
-  await user.save();
+  // Save all the changes made in the Cart and Product
   await cart.save();
   await product.save();
 
