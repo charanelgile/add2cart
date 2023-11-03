@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Cart = require("../models/Cart");
 const Order = require("../models/Order");
+const Product = require("../models/Product");
 const { StatusCodes } = require("http-status-codes");
 
 // View All Orders
@@ -207,32 +208,168 @@ const confirmOrder = async (req, res) => {
 
 // Update Order
 const updateOrder = async (req, res) => {
-  /*
-    Properties that can be updated in an order:
-    - recipient
-    - phone
-    - address
-    - status
-    - items for checkout
-      - increase / decrease in item quantity
-        - when increasing:
-          - update the product in stock
-          - update the total amount
-        - when decreasing:
-          - update the product in stock
-          - update the total amount
-          - if decreased to 0
-            - remove the product in the array and
-            - update the items for checkout
-            - update the product in stock
-            - update the total amount
-      - remove a particular product in the items for checkout
-        - update the items for checkout
-        - update the product in stock
-        - update the total amount
-  */
+  const {
+    body: { recipient, phone, address, status, productID, productAction },
+    params: { id: orderID },
+  } = req;
 
-  res.send("Update Order");
+  let order = await Order.findById({ _id: orderID });
+
+  if (!order) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: "Order not found",
+      },
+    });
+  }
+
+  order.shippingDetails = {
+    recipient,
+    phone,
+    address,
+  };
+
+  if (status === "") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Order Status cannot be empty",
+      },
+    });
+  } else if (
+    status &&
+    status !== "pending" &&
+    status !== "being prepared" &&
+    status !== "on the way" &&
+    status !== "delivered"
+  ) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Invalid Order Status",
+      },
+    });
+  } else {
+    order.status = status;
+  }
+
+  // When Product ID is found in the request body,
+  // that can only mean that an update will be made
+  // involving a product associated with the order
+  if (productID === "") {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message:
+          "Unable to determine which product in the order will be updated",
+      },
+    });
+  } else if (productID && productID !== "") {
+    // Check if the product exists in the items
+    // associated with the order being updated
+    const targetProduct = order.items.find((item) => {
+      return item.product.toString() === productID;
+    });
+
+    if (!targetProduct) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        error: {
+          message: "Product not found in the order",
+        },
+      });
+    }
+
+    if (!productAction || productAction === "") {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        error: {
+          message:
+            "Please specify the action you want to perform on the product",
+        },
+      });
+    } else if (
+      productAction &&
+      productAction !== "increase" &&
+      productAction !== "decrease" &&
+      productAction !== "remove"
+    ) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        error: {
+          message: "Invalid action requested",
+        },
+      });
+    }
+
+    let product = await Product.findById({ _id: productID });
+
+    // Increase Product Quantity
+    if (productAction === "increase") {
+      // If the action intended was to increase the product quantity,
+      // check first if the product still has an available stock or not
+      if (product.stock > 0) {
+        // Add 1 to the quantity of the target product in the order
+        targetProduct.quantity++;
+
+        // Update the product in stock
+        product.stock--;
+      } else {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          error: {
+            message:
+              "Unable to increase quantity. No more stock left for this product.",
+          },
+        });
+      }
+    }
+
+    // Decrease Product Quantity
+    if (productAction === "decrease") {
+      // If the action intended was to decrease the product quantity,
+      // check if the product quantity should actually be decreased
+      // or if the product should be removed from the list instead
+      if (targetProduct.quantity > 1) {
+        // Subtract 1 from the quantity of the target product in the order
+        targetProduct.quantity--;
+      } else {
+        // Remove the target product in the order if the remaining quantity is 1
+        order.items = order.items.filter((item) => {
+          return item.product.toString() !== productID;
+        });
+      }
+
+      // Update the product in stock
+      product.stock++;
+    }
+
+    // Remove Product
+    if (productAction === "remove") {
+      // Remove the target product in the order
+      order.items = order.items.filter((item) => {
+        return item.product.toString() !== productID;
+      });
+
+      // Update the product in stock
+      product.stock += targetProduct.quantity;
+    }
+
+    // Recalculate the Total Amount after increase / decrease / remove
+    order.totalAmount = order.items
+      // Flatten the array and get the subtotal from each item
+      .map((item) => item.price * item.quantity)
+      // Compute the total from the resulting array of subtotals
+      .reduce((total, current) => {
+        return total + current;
+      }, 0); // Initial Value set to 0 by default, in case all items in the order are removed
+
+    // Save the changes made to the Product
+    await product.save();
+  }
+
+  // Save the changes made to the Order
+  await order.save();
+
+  res.status(StatusCodes.OK).json({
+    action: "update order",
+    status: "successful",
+    message: "Order successfully updated",
+    order,
+  });
 };
 
 // Cancel Order
