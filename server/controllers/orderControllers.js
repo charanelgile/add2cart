@@ -167,6 +167,9 @@ const confirmOrder = async (req, res) => {
       return total + current; // ... Then compute the total from the array of subtotals
     });
 
+  // Limit the Total Amount to 2 decimal places
+  totalAmount = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
+
   // Assign a default value to each Shipping Detail, in case none was specified
   // If name is empty or not specified, assign the User's Name
   if (!shippingDetails.recipient || shippingDetails.recipient === "") {
