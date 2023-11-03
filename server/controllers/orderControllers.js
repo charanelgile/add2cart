@@ -357,6 +357,10 @@ const updateOrder = async (req, res) => {
         return total + current;
       }, 0); // Initial Value set to 0 by default, in case all items in the order are removed
 
+    // Limit the Total Amount to 2 decimal places
+    order.totalAmount =
+      Math.round((order.totalAmount + Number.EPSILON) * 100) / 100;
+
     // Save the changes made to the Product
     await product.save();
   }
