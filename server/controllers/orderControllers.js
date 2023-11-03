@@ -240,10 +240,16 @@ const cancelOrder = async (req, res) => {
   res.send("Cancel Order");
 };
 
+// Delete Order
+const deleteOrder = async (req, res) => {
+  res.send("Delete Order");
+};
+
 module.exports = {
   viewAllOrders,
   viewOrder,
   confirmOrder,
   updateOrder,
   cancelOrder,
+  deleteOrder,
 };

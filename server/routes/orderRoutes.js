@@ -5,6 +5,7 @@ const {
   confirmOrder,
   updateOrder,
   cancelOrder,
+  deleteOrder,
 } = require("../controllers/orderControllers");
 
 // View All Orders
@@ -20,6 +21,9 @@ router.post("/confirm", confirmOrder);
 router.patch("/update/:id", updateOrder);
 
 // Cancel Order
-router.delete("/cancel/:id", cancelOrder);
+router.patch("/cancel/:id", cancelOrder);
+
+// Delete Order
+router.delete("/delete/:id", deleteOrder);
 
 module.exports = router;
