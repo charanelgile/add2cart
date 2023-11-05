@@ -279,6 +279,8 @@ const updateOrder = async (req, res) => {
       });
     }
 
+    // A Product Action is needed to determine what kind
+    // of update will be done to the target product
     if (!productAction || productAction === "") {
       return res.status(StatusCodes.BAD_REQUEST).json({
         error: {
@@ -361,6 +363,7 @@ const updateOrder = async (req, res) => {
       }, 0); // Initial Value set to 0 by default, in case all items in the order are removed
 
     // Limit the Total Amount to 2 decimal places
+    // https://java2blog.com/round-to-2-decimal-places-javascript/
     order.totalAmount =
       Math.round((order.totalAmount + Number.EPSILON) * 100) / 100;
 
@@ -381,7 +384,51 @@ const updateOrder = async (req, res) => {
 
 // Cancel Order
 const cancelOrder = async (req, res) => {
-  res.send("Cancel Order");
+  const { id: orderID } = req.params;
+
+  const order = await Order.findById({ _id: orderID });
+
+  if (!order) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: "Order not found",
+      },
+    });
+  }
+
+  // Order Cancellation is only allowed for orders
+  // with status of "pending" or "being prepared"
+  if (order.status === "pending" || order.status === "being prepared") {
+    // For each product in the order...
+    order.items.forEach(async (item) => {
+      let product = await Product.findById({ _id: item.product });
+
+      // ... Return the quantity to its appropriate product stock
+      product.stock += item.quantity;
+
+      // Save the changes to the current product
+      await product.save();
+    });
+
+    // Change the order status to "cancelled"
+    order.status = "cancelled";
+
+    // Save the changes to the order
+    await order.save();
+  } else {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Order can no longer be cancelled",
+      },
+    });
+  }
+
+  res.status(StatusCodes.OK).json({
+    action: "cancel order",
+    status: "successful",
+    message: "Order successfully cancelled",
+    order,
+  });
 };
 
 // Delete Order
