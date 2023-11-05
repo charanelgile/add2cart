@@ -433,7 +433,24 @@ const cancelOrder = async (req, res) => {
 
 // Delete Order
 const deleteOrder = async (req, res) => {
-  res.send("Delete Order");
+  const { id: orderID } = req.params;
+
+  const order = await Order.findByIdAndRemove({ _id: orderID });
+
+  if (!order) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: "Order not found",
+      },
+    });
+  }
+
+  res.status(StatusCodes.OK).json({
+    action: "delete order",
+    status: "successful",
+    message: "Order successfully deleted",
+    order,
+  });
 };
 
 module.exports = {
