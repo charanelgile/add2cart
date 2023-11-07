@@ -9,6 +9,7 @@ const cloudinary = require("cloudinary").v2; // NEVER FORGET THE V2
 const dbconnect = require("./database/dbconnect");
 
 // Routers
+const adminRouters = require("./routes/adminRoutes");
 const productRouters = require("./routes/productRoutes");
 const userRouters = require("./routes/userRoutes");
 const cartRouters = require("./routes/cartRoutes");
@@ -30,6 +31,7 @@ app.use(express.json());
 app.use(fileUpload({ useTempFiles: true }));
 
 // Endpoints
+app.use("/api/v1/admin", adminRouters);
 app.use("/api/v1/products", productRouters);
 app.use("/api/v1/users", userRouters);
 app.use("/api/v1/cart", cartRouters);
