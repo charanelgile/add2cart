@@ -2,6 +2,7 @@ const router = require("express").Router();
 
 // Authentication Middlewares
 const authenticateAdmin = require("../middlewares/authenticateAdmin");
+const authenticateUser = require("../middlewares/authenticateUser");
 
 // User Controllers
 const {
@@ -21,9 +22,9 @@ router
 router
   .route("/:id")
   .get(authenticateAdmin, getUser) // Admin Only
-  .patch(updateUser)
+  .patch(authenticateUser, updateUser) // User-accessible
   .delete(authenticateAdmin, deleteUser); // Admin Only
 
-router.post("/uploads", uploadUserImage);
+router.post("/uploads", authenticateUser, uploadUserImage); // User-accessible
 
 module.exports = router;

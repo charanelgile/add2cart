@@ -3,7 +3,8 @@ const { StatusCodes } = require("http-status-codes");
 const errorHandler = (error, req, res, next) => {
   let customError = {
     statusCode: error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
-    errorMessage: error.message || "Something went wrong. Try again later.",
+    errorMessage:
+      error.message || "Something went wrong. Try again later.",
   };
 
   if (error.name === "ValidationError") {
@@ -34,7 +35,7 @@ const errorHandler = (error, req, res, next) => {
     }`;
   }
 
-  console.log(error);
+  // console.log(error);
 
   // console.log(customError);
 
