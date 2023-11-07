@@ -229,7 +229,7 @@ const uploadUserImage = async (req, res) => {
   );
 
   // Prevent 'express-fileupload' from saving temporary files in the "tmp" subfolder
-  // fs.unlinkSync(req.files.image.tempFilePath);
+  fs.unlinkSync(req.files.image.tempFilePath);
 
   console.log(result);
 
