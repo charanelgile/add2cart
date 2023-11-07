@@ -445,6 +445,17 @@ const deleteOrder = async (req, res) => {
     });
   }
 
+  // Order Deletion is only allowed for orders
+  // with status of "delivered" or "cancelled"
+  if (order.status !== "delivered" && order.status !== "cancelled") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message:
+          "Deletion is only allowed for delivered and/or cancelled orders",
+      },
+    });
+  }
+
   res.status(StatusCodes.OK).json({
     action: "delete order",
     status: "successful",
