@@ -59,4 +59,14 @@ AdminSchema.methods.generateToken = function () {
   );
 };
 
+/*** Compare Password ***/
+AdminSchema.methods.comparePassword = async function (candidatePassword) {
+  const didPasswordsMatch = bcrypt.compare(
+    candidatePassword,
+    this.password
+  );
+
+  return didPasswordsMatch;
+};
+
 module.exports = mongoose.model("Admin", AdminSchema);
