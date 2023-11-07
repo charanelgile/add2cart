@@ -240,6 +240,87 @@ const uploadUserImage = async (req, res) => {
   });
 };
 
+// Sign Up User
+const signUpUser = async (req, res) => {
+  /*
+    Validations missing:
+      - gender
+      - shipping details:
+        - phone
+        - address
+  */
+
+  const user = await User.create(req.body);
+
+  const token = user.generateToken();
+
+  res.status(StatusCodes.CREATED).json({
+    action: "sign up user",
+    message: "User sign up successful",
+    user,
+    // user: {
+    //   fullname: user.fullName,
+    //   email: user.email,
+    //   gender: user.gender,
+    //   shippingDetails: user.shippingDetails,
+    //   image: user.image,
+    // },
+    token,
+  });
+};
+
+// Sign In User
+const signInUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: `${
+          !email
+            ? "Please provide your email"
+            : "Please provide the password"
+        }`,
+      },
+    });
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      error: {
+        message: "User account not found",
+      },
+    });
+  }
+
+  const isPasswordCorrect = await user.comparePassword(password);
+
+  if (!isPasswordCorrect) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
+      error: {
+        message: "Incorrect password",
+      },
+    });
+  }
+
+  const token = user.generateToken();
+
+  res.status(StatusCodes.OK).json({
+    action: "sign in user",
+    message: "User sign in successful",
+    user: {
+      fullname: user.fullName,
+      email: user.email,
+      gender: user.gender,
+      shippingDetails: user.shippingDetails,
+      image: user.image,
+    },
+    token,
+  });
+};
+
 module.exports = {
   getAllUsers,
   getUser,
@@ -247,4 +328,6 @@ module.exports = {
   updateUser,
   deleteUser,
   uploadUserImage,
+  signUpUser,
+  signInUser,
 };

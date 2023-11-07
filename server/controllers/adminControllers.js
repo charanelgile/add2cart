@@ -1,7 +1,7 @@
-const fs = require("fs");
+// const fs = require("fs");
 const Admin = require("../models/Admin");
 const { StatusCodes } = require("http-status-codes");
-const cloudinary = require("cloudinary").v2; // NEVER FORGET THE V2
+// const cloudinary = require("cloudinary").v2; // NEVER FORGET THE V2
 
 // Sign Up Admin
 const signUpAdmin = async (req, res) => {
@@ -59,7 +59,7 @@ const signInAdmin = async (req, res) => {
 
   const token = admin.generateToken();
 
-  res.status(StatusCodes.CREATED).json({
+  res.status(StatusCodes.OK).json({
     action: "sign in admin",
     message: "Admin sign in successful",
     admin: {
