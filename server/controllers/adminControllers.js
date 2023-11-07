@@ -7,11 +7,17 @@ const cloudinary = require("cloudinary").v2; // NEVER FORGET THE V2
 const signUpAdmin = async (req, res) => {
   const admin = await Admin.create(req.body);
 
+  const token = await admin.generateToken();
+
   res.status(StatusCodes.CREATED).json({
     action: "sign up admin",
-    status: "sucessful",
-    message: "Admin Sign Up successful",
-    admin,
+    message: "Admin sign up successful",
+    admin: {
+      fullName: admin.fullName,
+      email: admin.email,
+      image: admin.image,
+    },
+    token,
   });
 };
 

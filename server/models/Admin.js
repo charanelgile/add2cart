@@ -38,13 +38,25 @@ const AdminSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/*** ENCRYPT PASSWORD ***/
+/*** Encrypt Password ***/
 // Use regular function (not arrow function) for the "this" keyword to reference to the Schema in this module / file
 AdminSchema.pre("save", async function () {
-  // Establish the number of salt rounds when encrypting the password
+  // Define the number of salt rounds when encrypting the password
   const salt = await bcrypt.genSalt(10);
-  // Hash the password
+  // Encrypt the password
   this.password = await bcrypt.hash(this.password, salt);
 });
+
+/*** Generate Token ***/
+AdminSchema.methods.generateToken = function () {
+  return jwt.sign(
+    {
+      adminID: this._id,
+      adminName: `${this.fullName.firstName} ${this.fullName.lastName}`,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE }
+  );
+};
 
 module.exports = mongoose.model("Admin", AdminSchema);
