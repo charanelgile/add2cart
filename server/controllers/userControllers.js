@@ -102,7 +102,12 @@ const createUser = async (req, res) => {
 // Update User
 const updateUser = async (req, res) => {
   const {
-    body: { firstName, lastName, gender, phone, address, image },
+    body: {
+      fullName: { firstName, lastName },
+      gender,
+      shippingDetails: { phone, address },
+      image,
+    },
     params: {
       // Destructure the 'id' from req.params and
       // assign it an alias of "userID"
@@ -110,77 +115,52 @@ const updateUser = async (req, res) => {
     },
   } = req;
 
-  if (gender === "") {
+  if (!firstName || !lastName) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
-        message: "Please do not leave the Gender empty",
+        message: `${
+          !firstName ? "First Name" : "Last Name"
+        } cannot be empty / blank`,
       },
     });
   }
 
-  if (image === "") {
+  if (!gender) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
-        message: "Image cannot be empty",
+        message: "Please specify your Gender",
       },
     });
   }
 
-  let result = User.findByIdAndUpdate(
-    { _id: userID },
-    { gender, image },
-    { new: true, runValidators: true } // This will ensure that the API Endpoint will return the updated User Details
-  );
-
-  if (firstName !== "") {
-    result = result.findOneAndUpdate({
-      "fullName.firstName": firstName,
-    });
-  } else {
+  if (!phone) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
-        message: "First Name cannot be empty",
+        message: "Please provide your Phone Number",
       },
     });
   }
 
-  if (lastName !== "") {
-    result = result.findOneAndUpdate({
-      "fullName.lastName": lastName,
-    });
-  } else {
+  if (!address) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
-        message: "Last Name cannot be empty",
+        message: "Please provide your Address",
       },
     });
   }
 
-  if (phone !== "") {
-    result = result.findOneAndUpdate({
-      "shippingDetails.phone": phone,
-    });
-  } else {
+  if (!image) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       error: {
-        message: "Please do not leave the Phone Number empty",
+        message: "Please upload an image",
       },
     });
   }
 
-  if (address !== "") {
-    result = result.findOneAndUpdate({
-      "shippingDetails.address": address,
-    });
-  } else {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      error: {
-        message: "Please do not leave the Address empty",
-      },
-    });
-  }
-
-  const user = await result;
+  const user = await User.findByIdAndUpdate({ _id: userID }, req.body, {
+    new: true,
+    runValidators: true,
+  });
 
   if (!user) {
     return res.status(StatusCodes.NOT_FOUND).json({
@@ -190,9 +170,17 @@ const updateUser = async (req, res) => {
     });
   }
 
-  res
-    .status(StatusCodes.OK)
-    .json({ action: "update", status: "successful", user });
+  res.status(StatusCodes.OK).json({
+    action: "update user",
+    message: "User account successfully updated",
+    user: {
+      fullname: user.fullName,
+      email: user.email,
+      gender: user.gender,
+      shippingDetails: user.shippingDetails,
+      image: user.image,
+    },
+  });
 };
 
 // Delete User
@@ -242,13 +230,34 @@ const uploadUserImage = async (req, res) => {
 
 // Sign Up User
 const signUpUser = async (req, res) => {
-  /*
-    Validations missing:
-      - gender
-      - shipping details:
-        - phone
-        - address
-  */
+  const {
+    gender,
+    shippingDetails: { phone, address },
+  } = req.body;
+
+  if (!gender) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please specify your Gender",
+      },
+    });
+  }
+
+  if (!phone) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please provide your Phone Number",
+      },
+    });
+  }
+
+  if (!address) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: {
+        message: "Please provide your Address",
+      },
+    });
+  }
 
   const user = await User.create(req.body);
 
@@ -257,14 +266,13 @@ const signUpUser = async (req, res) => {
   res.status(StatusCodes.CREATED).json({
     action: "sign up user",
     message: "User sign up successful",
-    user,
-    // user: {
-    //   fullname: user.fullName,
-    //   email: user.email,
-    //   gender: user.gender,
-    //   shippingDetails: user.shippingDetails,
-    //   image: user.image,
-    // },
+    user: {
+      fullname: user.fullName,
+      email: user.email,
+      gender: user.gender,
+      shippingDetails: user.shippingDetails,
+      image: user.image,
+    },
     token,
   });
 };
